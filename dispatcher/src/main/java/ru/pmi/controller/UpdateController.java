@@ -8,6 +8,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Log4j
 public class UpdateController {
     private TelegramBot telegramBot;
+    private CommandControl commandControl;
+
+    public UpdateController(CommandControl commandControl) { // конструктор команд
+        this.commandControl = commandControl;
+    }
 
     public void registerBot(TelegramBot telegramBot){
         this.telegramBot = telegramBot;
@@ -20,12 +25,11 @@ public class UpdateController {
             return;
         }
 
-        // Работает только с сообщениями из приватных чатов.
-        // То есть исправленные или пересланные сообщения не обрабатываются
-        if(update.getMessage() != null){
-            distributeMessagesByType(update);
-        }else {
-            log.error("Received unsupported message type " + update);
+        // Передаём обработку в CommandControl
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            commandControl.handleCommand(update);
+        } else {
+            log.error("Received unsupported message type: " + update);
         }
     }
 

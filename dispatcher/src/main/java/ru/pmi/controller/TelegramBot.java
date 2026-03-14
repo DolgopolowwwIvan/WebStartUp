@@ -14,19 +14,22 @@ import javax.annotation.PostConstruct;
 @Log4j
 public class TelegramBot extends TelegramLongPollingBot {
 
+    private final CommandControl commandControl;
     @Value("${bot.name}")
     private String botName;
     @Value("${bot.token}")
     private String botToken;
     private UpdateController updateController;
 
-    public TelegramBot(UpdateController updateController){
+    public TelegramBot(UpdateController updateController, CommandControl commandControl){
         this.updateController = updateController;
+        this.commandControl = commandControl;
     }
 
     @PostConstruct
     public void init(){
         updateController.registerBot(this);
+        commandControl.registerBot(this);
     }
 
     @Override
@@ -36,13 +39,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        var originalMessage = update.getMessage();
-        log.debug(originalMessage.getText());
-
-        var response = new SendMessage();
-        response.setChatId(originalMessage.getChatId().toString());
-        response.setText("Hello from bot");
-        sendAnswerMessage(response);
+        updateController.processUpdate(update);
     }
 
     @Override
